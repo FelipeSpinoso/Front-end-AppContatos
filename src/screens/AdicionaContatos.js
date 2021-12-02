@@ -1,22 +1,22 @@
 import React, { useState } from 'react'
-import { StyleSheet, View, Text, Image, Alert } from 'react-native'
-import { Avatar, Caption, TextInput, FAB, Button, HelperText, Checkbox, ProgressBar, Snackbar, withTheme } from 'react-native-paper'
+import { StyleSheet, View, Text } from 'react-native'
+import { Caption, TextInput, FAB, Button, HelperText, ProgressBar, Snackbar, withTheme } from 'react-native-paper'
 import Header from '../components/Header'
 import { BACKEND } from '../constants'
 
-
+import * as DocumentPicker from 'expo-document-picker'
 function AdicionaContatos({ navigation, route, theme }) {
   const { colors } = theme
   //obtendo os dados da alteração via rota
   const { data } = route.params
   const [nome, setNome] = useState(data.nome)
-  const [status, setStatus] = useState(data.status)
-  const fotoVazia = { originalname: '', path: '', size: 0, mimetype: '' }
+  const [sobrenome, setSobreNome] = useState(data.sobrenome)
+  const [numero, setNumero] = useState(data.numero)
+  const [email, setEmail] = useState(data.email)
   const [foto, setFoto] = useState(data.foto)
   const [erros, setErros] = useState({})
-  const [upload, setUpload] = useState(false)
   const [salvandoContato, setSalvandoContato] = useState(false)
-  const [aviso, setAviso] = useState('')
+  
 
   async function salvaContato() {
     const novosErros = validaErrosContato()
@@ -27,9 +27,10 @@ function AdicionaContatos({ navigation, route, theme }) {
     } else {
       //Verificamos se o registro possui _id. Se não tiver, inserimos via POST, senão alteramos via PUT
       const metodo = data._id === null ? 'POST' : 'PUT'
-      let statusContato = (status === true || status === 'ativo') ? 'ativo' : 'inativo'
       let contato = { nome: nome, 
-        SobreNome: statusContato,
+        SobreNome: sobrenome,
+        email: email,
+        numero: numero,
          foto: foto, 
          _id:
           data._id }
@@ -96,11 +97,7 @@ function AdicionaContatos({ navigation, route, theme }) {
           console.error('Houve um problema ao fazer o upload: ' + error.message);
         })
       setUpload(false)
-    } else {
-      Alert.alert(
-        "Atenção!",
-        "Nenhuma imagem foi selecionada.")
-    }
+    } 
   }
 
   return (
@@ -123,41 +120,50 @@ function AdicionaContatos({ navigation, route, theme }) {
         <HelperText type="error" visible={!!erros.nome}>
           {erros.nome}
         </HelperText>
-        <View style={styles.checkbox}>
-          <Checkbox
-            status={status ? 'checked' : 'unchecked'}
-            onPress={() => {
-              setStatus(!status);
-            }}
-          />
-          <Text style={{ color: colors.text, marginTop: 10 }}>Ativa?</Text>
-        </View>
-        {upload && <ProgressBar indeterminate={true} />}
-       
 
-        <Button icon="camera" mode="contained" onPress={obterImagem} style={{marginTop: 32, padding: 8}}>
-          Selecionar Imagem
-        </Button>
-        <HelperText type="error" visible={!!erros.foto}>
-          {erros.foto}
+        <TextInput
+          label='Sobrenome'
+          name="Sobrenome"
+          value={sobrenome}
+          mode='outlined'
+          onChangeText={setSobreNome}
+          error={!!erros.sobrenome}
+        />
+        <HelperText type="error" visible={!!erros.sobrenome}>
+          {erros.sobrenome}
         </HelperText>
+        <TextInput
+          label='Número'
+          name="numero"
+          value={numero}
+          mode='outlined'
+          onChangeText={setNumero}
+          error={!!erros.numero}
+        />
+        <HelperText type="error" visible={!!erros.numero}>
+          {erros.numero}
+        </HelperText>
+        <TextInput
+          label='Email'
+          name="email"
+          value={email}
+          mode='outlined'
+          onChangeText={setEmail}
+          error={!!erros.email}
+        />
+        <HelperText type="error" visible={!!erros.email}>
+          {erros.email}
+        </HelperText>
+       
+       
         <FAB
           style={styles.fab}
           icon='content-save'
           label='Salvar'
           loading={salvandoContato}
-          disabled={erros.length > 0 || upload}
+
           onPress={() => salvaContato()}
         />
-        <Snackbar
-          visible={aviso.length > 0}
-          onDismiss={() => setAviso('')}
-          action={{
-            label: 'Voltar',
-            onPress: () => navigation.goBack()
-          }}>
-          <Text>{aviso}</Text>
-        </Snackbar>
       </View>
     </>
   )
